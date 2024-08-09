@@ -1,0 +1,323 @@
+import cloudinary from "../lib/cloudinary.js";
+import { extractCloudinaryImageIdFromUrl } from "../lib/extractCloudinaryImageIdFromUrl.js";
+import NotificationModel from "../models/notification.model.js";
+import PostModel from "../models/post.model.js";
+import UserModel from "../models/user.model.js";
+
+export const createPost = async (req, res) => {
+
+    const { text } = req.body;
+
+    let { image } = req.body;
+
+    const userId = req.userId;
+
+    try {
+        const user = await UserModel.findById(userId);
+
+        if(!user) {
+            return res.status(400).json({ success: false, message: "User not found" })
+        }
+
+        if(!text && !image) {
+            return res.status(400).json({ success: false, message: "Post must have a text or an image" })
+        }
+
+        if(image) {
+            const uploadResponse =  await cloudinary.uploader.upload(image);
+            image = uploadResponse.secure_url;
+        }
+
+        const newPost = new PostModel({
+            user: userId,
+            text,
+            image,
+        });
+
+
+        const savedPost = await newPost.save();
+        
+        const response = {
+            data: savedPost,
+            message: "Post created successfully",
+            success: true,
+        }
+
+        return res.status(201).json(response)
+    } catch (error) {
+        console.log(`CREATE POST:`, error)
+        return res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}
+
+
+export const followUnFollowUser = async (req, res) => {
+    try {
+        
+    } catch (error) {
+        
+    }
+}
+
+export const deletePost = async (req, res) => {
+
+    const {postId} = req.params;
+
+    try {
+
+        const post = await PostModel.findById(postId);
+
+        if(!post) {
+            return res.status(404).json({ success: false, message: "Post not found" })
+        }
+
+        if(post.user.toString() !== req.userId) {
+            return res.status(400).json({ success: false, message: "Unauthorized: You are not allowed to delete this post" })
+        }
+
+        if(post.image) {
+            const imageId = extractCloudinaryImageIdFromUrl(post.image)
+            await cloudinary.uploader.destroy(imageId)
+        }
+
+        const deletedPost =  await PostModel.findByIdAndDelete(postId);
+
+        if(!deletedPost) {
+            return res.status(400).json({ success: false, message: "Unable to delete post" })
+        }
+
+        return res.status(200).json({ success: true, message: "Post deleted successfully" })
+        
+    } catch (error) {
+        console.log(`DELETE POST:`, error)
+        return res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}
+
+export const commentOnPost = async (req, res) => {
+    const { postId } = req.params;
+    const { text } = req.body;
+    const  userId = req.userId;
+
+    try {
+
+        if(!text) {
+            return res.status(400).json({ success: false, message: "Comment text is required" })
+        }
+
+        const post = await PostModel.findById(postId);
+
+        if(!post) {
+            return res.status(404).json({ success: false, message: "Post not found" })
+        }
+
+        const comment = { user: userId, text }
+
+        post.comments.push(comment);
+
+        const commented  = await post.save();
+
+        if(!commented) {
+            return res.status(400).json({ success: false, message: "Post comment not saved" })
+        }
+
+        const response = {
+            data: commented,
+            message: "Post comment was successful",
+            success: true,
+        }
+
+        return res.status(200).json(response)
+ 
+    } catch (error) {
+        console.log(`COMMMENT ON POST:`, error)
+        return res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}
+
+export const likeAndUnlikePost = async (req, res) => {
+    
+    const { postId } = req.params;
+    const  userId = req.userId;
+
+    try {
+
+        const post = await PostModel.findById(postId);
+
+        if(!post) {
+            return res.status(404).json({ success: false, message: "Post not found" })
+        }
+
+        const userLikedPost = post.likes.includes(userId);
+
+        if(userLikedPost) {
+            await PostModel.updateOne({ _id: postId }, { $pull: {likes: userId }});
+            await UserModel.updateOne({ _id: userId }, { $pull: { likedPosts: postId } });
+            return res.status(200).json({success: true, message: "Post unliked was successful"})
+        } else {
+            post.likes.push(userId);
+            await UserModel.updateOne({ _id: userId }, { $push: { likedPosts: postId } });
+            await post.save();
+            const notification = new NotificationModel({
+                from: userId,
+                to: post.user,
+                type: "like",
+            });
+
+            await notification.save();
+            
+            return res.status(200).json({success: true, message: "Post liked successfully"})
+        }
+ 
+    } catch (error) {
+        console.log(`COMMMENT ON POST:`, error)
+        return res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}
+
+export const getAllPosts = async (req, res) => {
+
+    try {
+
+        const posts = await PostModel.find({}).sort({ createdAt: -1 }).populate({
+            path: "user",
+            select: "-password"
+        }).
+        populate({
+            path: "comments.user",
+            select: "-password"
+        })
+
+        if(!posts) {
+            return res.status(404).json({ success: false, message: "Post not found" })
+        }
+
+        if(!posts.length === 0) {
+            const response = {
+                data: [],
+                message: "All posts",
+                success: true,
+            }
+    
+            return res.status(200).json(response)
+        }
+
+        const response = {
+            data: posts,
+            message: "All posts",
+            success: true,
+        }
+
+        return res.status(200).json(response)
+
+ 
+    } catch (error) {
+        console.log(`GET ALL POST:`, error)
+        return res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}
+
+export const getLikedPosts = async (req, res) => {
+
+    const { userId } = req.params;
+
+    try {
+
+        const user = await UserModel.findById(userId);
+
+        if(!user) {
+            return res.status(404).json({ success: false, message: "User not found" })
+        }
+
+        const likedPosts = await PostModel.find({_id: {$in: user.likedPosts } })
+        .populate({ path: "user", select: "-password", })
+        .populate({ path: "comments.user", select: "-password", })
+
+        const response = {
+            data: likedPosts,
+            message: "All post likes",
+            success: true,
+        }
+
+        return res.status(200).json(response)
+
+    } catch (error) {
+        console.log(`GET LIKED POSTS:`, error)
+        return res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}
+
+export const getFollowingPosts = async (req, res) => {
+
+    const userId = req.userId;
+
+    try {
+
+        const user = await UserModel.findById(userId);
+
+
+        if(!user) {
+            return res.status(404).json({ success: false, message: "User not found" })
+        }
+
+        const following = user.following;
+
+        const feedPosts = await PostModel.find({ user: {$in: following } })
+        .sort({ createdAt: -1 })
+        .populate({ path: "user", select: "-password", })
+        .populate({ path: "comments.user", select: "-password", });
+
+
+        if(!feedPosts) {
+            return res.status(404).json({ success: false, message: "No post found" })
+        }
+
+        const response = {
+            data: feedPosts,
+            message: "All following posts",
+            success: true,
+        }
+
+        return res.status(200).json(response);
+
+    } catch (error) {
+        console.log(`GET FOLLOWING FEED POSTS:`, error)
+        return res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}
+
+
+export const getUserPosts = async (req, res) => {
+
+    const userId = req.userId;
+
+    const userName = req.params.username;
+
+    try {
+
+        const user = await UserModel.findOne({userName});
+
+
+        if(!user) {
+            return res.status(404).json({ success: false, message: "User not found" })
+        }
+
+
+        const posts = await PostModel.find({ user:userId })
+            .sort({ createdAt: -1 })
+            .populate({ path: "user", select: "-password", })
+            .populate({ path: "comments.user", select: "-password", });
+
+        const response = {
+            data: posts,
+            message: "All following posts",
+            success: true,
+        }
+
+        return res.status(200).json(response);
+
+    } catch (error) {
+        console.log(`GET USER FEED POSTS:`, error)
+        return res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}
