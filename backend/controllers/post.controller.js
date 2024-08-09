@@ -291,7 +291,7 @@ export const getUserPosts = async (req, res) => {
 
     const userId = req.userId;
 
-    const userName = req.params.username;
+    const {userName} = req.params;
 
     try {
 
