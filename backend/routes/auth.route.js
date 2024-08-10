@@ -11,7 +11,7 @@ router.route("/sign-up")
       .post(signUp)
 
 router.route("/sign-out")
-      .get(protectRoute, signOut)
+      .post(protectRoute, signOut)
 
 router.route("/me")
       .get(protectRoute, getMe)

@@ -1,33 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from "react"
+import { Navigate, Route, Routes } from "react-router-dom"
+import HomePage from "./pages/home/HomePage"
+import SignUpPage from "./pages/auth/signup/SignUpPage"
+import SignInPage from "./pages/auth/signin/SignInPage"
+import AuthLayout from "./layouts/AuthLayout"
+import MainLayout from "./layouts/MainLayout"
+import NotificationPage from "./pages/notification/NotificationPage"
+import ProfilePage from "./pages/profile/ProfilePage"
+import { useQuery } from "@tanstack/react-query"
+import apiClient from "./api"
+import LoadingSpinner from "./components/common/LoadingSpinner"
+
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const { data, isPending, isError, error  } = useQuery({
+    queryKey: ["authUser"],
+    queryFn: async () => await apiClient.getLoggedInUser(),
+    retry: false,
+  });
+
+
+  if(isPending) {
+    return <LoadingSpinner />
+  }
+
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+    <div className='flex max-w-6xl mx-auto'>
+
+      <Routes>
+
+        <Route>
+          <Route element={<MainLayout />}>
+            <Route path='/' element={<HomePage />} />
+            <Route path='/profile/:username' element={<ProfilePage />} />
+            <Route path='/notifications' element={<NotificationPage />} />
+          </Route>
+
+          <Route element={<AuthLayout />}>
+            <Route path='/signin' element={<SignInPage />} />
+            <Route path='/signup' element={<SignUpPage />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to={"/"} />} />
+
+        </Route>
+
+
+			</Routes>
+    </div>
     </>
   )
 }

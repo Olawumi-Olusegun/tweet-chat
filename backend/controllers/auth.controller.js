@@ -5,11 +5,11 @@ export const signIn = async (req, res) => {
 
     const { email, password } = req.body;
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if(!emailRegex.test(email)) {
-        return res.status(400).json({ message: "Invalid email format" })
-    }
+    // if(!emailRegex.test(email)) {
+    //     return res.status(400).json({ message: "Invalid email format" })
+    // }
 
     try {
 
@@ -137,14 +137,14 @@ export const getMe = async (req, res) => {
 
         const response = {
             data: {
-                _id: savedUser.id,
-                fullName: savedUser.fullName,
-                userName: savedUser.userName,
-                email: savedUser.email,
-                followers: savedUser.followers,
-                following: savedUser.following,
-                profileImage: savedUser.profileImage,
-                coverImage: savedUser.coverImage,
+                _id: user.id,
+                fullName: user.fullName,
+                userName: user.userName,
+                email: user.email,
+                followers: user.followers,
+                following: user.following,
+                profileImage: user.profileImage,
+                coverImage: user.coverImage,
             },
             message: "My data",
             success: true,
@@ -153,7 +153,7 @@ export const getMe = async (req, res) => {
         return res.status(200).json(response);
 
     } catch (error) {
-    
+        console.log(error)
         return res.status(500).json({ success: false, message: "Something went wrong" })
     }
 }
