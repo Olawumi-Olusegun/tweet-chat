@@ -164,6 +164,28 @@ export const createPost = async ({text, image}) => {
     }
 }
 
+export const suggestedUsers = async () => {
+
+    try {
+        
+        const response = await fetch(`/api/v1/users/suggested`, {
+            method: "GET",
+            credentials: "include",
+        });
+
+        const responseBody = await response.json();
+
+        if(!response.ok) {
+            throw new Error(responseBody?.message)
+        }
+      
+        return responseBody?.data;
+
+    } catch (error) {
+        throw new Error(error?.message)
+    }
+}
+
 const apiClient = {
     signIn,
     signUp,
@@ -172,6 +194,7 @@ const apiClient = {
     getPosts,
     deletePost,
     createPost,
+    suggestedUsers,
 }
 
 export default apiClient;

@@ -35,12 +35,9 @@ const CreatePost = () => {
 	const imgRef = useRef(null);
 
 
-	const data = {
-		profileImg: "/avatars/boy1.png",
-	};
-
 	const handleSubmit = (e) => {
 		e.preventDefault();
+		if(!text && !image) return
 		createPostMutation({ text, image })
 	};
 
