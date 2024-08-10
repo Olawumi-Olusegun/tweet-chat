@@ -18,7 +18,7 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors({ origin: ["http://localhost:5173, http://localhost:8000"] }))
+app.use(cors({ origin: ["http://localhost:5173, http://localhost:8000"] }));
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -33,7 +33,7 @@ if(process.env.NODE_ENV === "production") {
 
     app.get("*", (req, res) => {
         res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
-    })
+    });
 }
 
 

@@ -1,4 +1,3 @@
-
 import { CiImageOn } from "react-icons/ci";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { useRef, useState } from "react";
@@ -8,26 +7,25 @@ import apiClient from "../../api";
 import toast from "react-hot-toast";
 
 const CreatePost = () => {
-    
+
 	const [text, setText] = useState("");
 	const [image, setImage] = useState(null);
 
 	const queryClient = useQueryClient();
 
-	const { data: userData } = useQuery({queryKey: ["authUser"]})
+	const { data: userData } = useQuery({queryKey: ["authUser"]});
 	const authUser = userData?.data;
 
 	const { mutate: createPostMutation, isPending, isError, error } = useMutation({
 		mutationKey: "createPost",
 		mutationFn: async ({text, image}) => await apiClient.createPost({text, image}),
 		onSuccess: async () => {
-			setText("")
-			setImage(null)
-			toast.success("Post created successfully");
+			setText("");
+			setImage(null);
 			queryClient.invalidateQueries({queryKey: ["posts"]})
 		},
 		onError: () => {
-			toast.success("Unable to create post");
+			toast.error("Unable to create post");
 		}
 	});
 
