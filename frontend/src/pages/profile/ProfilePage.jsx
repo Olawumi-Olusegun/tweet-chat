@@ -9,12 +9,12 @@ import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
 import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import apiClient from "../../api";
 import { formatMemberSinceDate } from "../../utils/date";
 import useFollow from "../../hooks/useFollow";
 import LoadingSpinnerSmall from "../../components/common/LoadingSpinnerSmall";
-import toast from "react-hot-toast";
+import useUpdateProfile from "../../hooks/useUpdateProfile";
 
 const ProfilePage = () => {
 	const [coverImage, setCoverImage] = useState(null);
@@ -27,33 +27,15 @@ const ProfilePage = () => {
 	const { username } = useParams();
 	const { followAndUnfollowMutation, isPending } = useFollow();
 
-	const queryClient = useQueryClient();
-
 	const { data: userData } = useQuery({queryKey: ["authUser"]})
 	const authUser = userData?.data;
+
+	const { updateProfileMutation, isUpdating } = useUpdateProfile()
 
 	const { data: user, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["userProfile"],
 		queryFn:  () => apiClient.userProfile(username),
 		enabled: !!username,
-	});
-
-	const { mutate: updateMutation, isPending: isUpdating } = useMutation({
-		mutationKey: ["updateProfile"],
-		mutationFn:  () => apiClient.updateProfile({coverImage, profileImage}),
-		onSuccess: () => {
-			toast.success("Profile updated successfully")
-			Promise.all([
-				queryClient.invalidateQueries({queryKey: ["authUser"]}),
-				queryClient.invalidateQueries({queryKey: ["userProfile"]}),
-			])
-		setProfileImage(null);
-		setCoverImage(null);
-		},
-		onError: (error) => {
-			console.log(error)
-			toast.error("Unable to update profile")
-		},
 	});
 
 
@@ -79,9 +61,11 @@ const ProfilePage = () => {
 		}
 	};
 
-	const handleImageUpdate = () => {
+	const handleImageUpdate = async () => {
 		if(isUpdating) return;
-		updateMutation()
+		await updateProfileMutation({coverImage, profileImage})
+		setCoverImage(null);
+		setProfileImage(null)
 	}
 
 	if(!username || !user) {

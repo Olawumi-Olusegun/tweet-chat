@@ -1,7 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import apiClient from "../../api";
-import toast from "react-hot-toast";
+import useUpdateProfile from "../../hooks/useUpdateProfile";
 
 const EditProfileModal = ({authUser}) => {
 	const [formData, setFormData] = useState({
@@ -16,32 +14,25 @@ const EditProfileModal = ({authUser}) => {
 
 	const {fullName, userName, email, bio, link, newPassword, currentPassword } = formData;
 
-	const queryClient = useQueryClient();
-
-	const { mutate: updateMutation, isPending: isUpdating } = useMutation({
-		mutationKey: ["updateProfile"],
-		mutationFn:  () => apiClient.updateProfile({fullName, userName, email, bio, link, newPassword, currentPassword }),
-		onSuccess: () => {
-			toast.success("Profile updated successfully")
-			Promise.all([
-				queryClient.invalidateQueries({queryKey: ["authUser"]}),
-				queryClient.invalidateQueries({queryKey: ["userProfile"]}),
-			])
-		},
-		onError: (error) => {
-			console.log(error)
-			toast.error(error?.message)
-		},
-	});
+	const {updateProfileMutation, isUpdating } = useUpdateProfile()
 
 	const handleInputChange = (e) => {
 		setFormData({ ...formData, [e.target.name]: e.target.value });
 	};
 
-	const handleProfileUpdate = (event) => {
+	const handleProfileUpdate = async (event) => {
 		event.preventDefault();
 		if(isUpdating) return;
-		updateMutation()
+		await updateProfileMutation({fullName, userName, email, bio, link, newPassword, currentPassword });
+		setFormData({
+			fullName: "",
+			userName: "",
+			email: "",
+			bio: "",
+			link: "",
+			newPassword: "",
+			currentPassword: "",
+		})
 	}
 
 	useEffect(() => {
