@@ -7,6 +7,9 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "../../api";
+import toast from "react-hot-toast";
+import LoadingSpinnerSmall from "./LoadingSpinnerSmall";
+import { formatPostDate } from "../../utils/date";
 
 const Post = ({ post }) => {
 
@@ -15,33 +18,68 @@ const Post = ({ post }) => {
 
 	const queryClient = useQueryClient();
 
-	const { mutate: deletePostMutation, isPending,  } = useMutation({
+	const { mutate: deletePostMutation, isPending: isDeleting,  } = useMutation({
 		mutationKey: ["deletePost"],
 		mutationFn: async () => await apiClient.deletePost(post._id),
-		onSuccess: () => {
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({queryKey: ["posts"]})
+		}
+	});
+
+	const { mutate: likePostMutation, isPending: isLiking } = useMutation({
+		mutationFn: async () => await apiClient.likeAndUnlikePost(post._id),
+		onSuccess: async (updatedLikes) => {
+			// await queryClient.invalidateQueries({queryKey: ["posts"]})
+			queryClient.setQueryData(["posts"], (oldData) => {
+				return oldData.map((oldPost) => {
+					if(oldPost?._id === post._id) {
+						return {...oldPost, likes: updatedLikes}
+					}
+					return oldPost;
+				})
+			})
+		},
+		onError: (error) => {
+			toast.error(error?.message);
+		}
+	});
+
+	
+	const { mutate: commentPostMutation, isPending: isCommenting, } = useMutation({
+		mutationKey: "commentPost",
+		mutationFn: async ({postId,  comment}) => await apiClient.commentPost({postId ,comment}),
+		onSuccess: async () => {
+			setComment("")
 			queryClient.invalidateQueries({queryKey: ["posts"]})
+		},
+		onError: () => {
+			toast.success("Unable to comment on post");
 		}
 	});
 
 	const [comment, setComment] = useState("");
 	const postOwner = post.user;
-	const isLiked = false;
+	const isLiked = post.likes.includes(authUser?._id);
 
 	const isMyPost = authUser._id === post.user._id;
 
-	const formattedDate = "1h";
-
-	const isCommenting = false;
+	const formattedDate = formatPostDate(post?.createdAt);
 
 	const handleDeletePost = () => {
+		if(isDeleting) return;
 		deletePostMutation()
 	};
 
 	const handlePostComment = (e) => {
 		e.preventDefault();
+		if(isCommenting) return;
+		commentPostMutation({postId: post?._id, comment })
 	};
 
-	const handleLikePost = () => {};
+	const handleLikePost = () => {
+		if(isLiking) return;
+		likePostMutation()
+	};
 
 	return (
 		<>
@@ -64,7 +102,7 @@ const Post = ({ post }) => {
 						{isMyPost && (
 							<span className='flex justify-end flex-1'>
 								{
-									isPending 
+									isDeleting 
 									? <span className="loading loading-spinner loading-xs"></span>
 									: <FaTrash className='cursor-pointer hover:text-red-500' onClick={handleDeletePost} />
 								}
@@ -74,10 +112,10 @@ const Post = ({ post }) => {
 					</div>
 					<div className='flex flex-col gap-3 overflow-hidden'>
 						<span>{post.text}</span>
-						{post.img && (
+						{post.image && (
 							<img
-								src={post.img}
-								className='h-80 object-contain rounded-lg border border-gray-700'
+								src={post.image}
+								className='h-80 object-cover rounded-lg border border-gray-700'
 								alt=''
 							/>
 						)}
@@ -136,7 +174,7 @@ const Post = ({ post }) => {
 										/>
 										<button className='btn btn-primary rounded-full btn-sm text-white px-4'>
 											{isCommenting ? (
-												<span className='loading loading-spinner loading-md'></span>
+												<span className='loading loading-spinner loading-xs'></span>
 											) : (
 												"Post"
 											)}
@@ -151,19 +189,30 @@ const Post = ({ post }) => {
 								<BiRepost className='w-6 h-6  text-slate-500 group-hover:text-green-500' />
 								<span className='text-sm text-slate-500 group-hover:text-green-500'>0</span>
 							</div>
-							<div className='flex gap-1 items-center group cursor-pointer' onClick={handleLikePost}>
-								{!isLiked && (
-									<FaRegHeart className='w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500' />
-								)}
-								{isLiked && <FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 ' />}
+							<div className='relative min-w-8 min-h-8 flex gap-1 items-center justify-center group cursor-pointer' onClick={handleLikePost}>
+								
+								{!isLiked && !isLiking 
+								? <FaRegHeart className='w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500' />
+								
+								: (
+									<div className=" flex items-center justify-center">
+									{isLiking 
+										? <LoadingSpinnerSmall/>
+										: (
+											<span
+												className={`flex items-center gap-1.5 text-sm group-hover:text-pink-500 ${
+													isLiked ? "text-pink-500" : "text-slate-500"
+												}`}
+											>
+												<FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 fill-pink-500 ' />
+												{post.likes.length}
+											</span>
 
-								<span
-									className={`text-sm text-slate-500 group-hover:text-pink-500 ${
-										isLiked ? "text-pink-500" : ""
-									}`}
-								>
-									{post.likes.length}
-								</span>
+										)
+									}
+									</div>
+								)}
+
 							</div>
 						</div>
 						<div className='flex w-1/3 justify-end gap-2 items-center'>

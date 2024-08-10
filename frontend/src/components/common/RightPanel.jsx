@@ -3,6 +3,7 @@ import RightPanelSkeleton from "../skeletons/RightPanelSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "../../api";
 import useFollow from "../../hooks/useFollow";
+import LoadingSpinnerSmall from "./LoadingSpinnerSmall";
 
 
 const RightPanel = () => {
@@ -66,7 +67,7 @@ const RightPanel = () => {
 										onClick={(event) => handleFollowAndUnfollow(event, user?._id)}
 									>
 										{ isPending 
-										? <span className="loading loading-spinner loading-xs"></span>
+										? <LoadingSpinnerSmall />
 										: "Follow" 
 										}
 									</button>

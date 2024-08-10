@@ -153,7 +153,16 @@ export const likeAndUnlikePost = async (req, res) => {
         if(userLikedPost) {
             await PostModel.updateOne({ _id: postId }, { $pull: {likes: userId }});
             await UserModel.updateOne({ _id: userId }, { $pull: { likedPosts: postId } });
-            return res.status(200).json({success: true, message: "Post unliked was successful"})
+            
+            const updatedLikes = post.likes.filter((id) => id.toString() !== userId.toString());
+
+            const response = {
+                data: updatedLikes, 
+                success: true, 
+                message: "Post unliked was successfull"
+            }
+
+            return res.status(200).json(response)
         } else {
             post.likes.push(userId);
             await UserModel.updateOne({ _id: userId }, { $push: { likedPosts: postId } });
@@ -165,8 +174,14 @@ export const likeAndUnlikePost = async (req, res) => {
             });
 
             await notification.save();
+
+            const response = {
+                data: post.likes, 
+                success: true, 
+                message: "Post liked successfully"
+            }
             
-            return res.status(200).json({success: true, message: "Post liked successfully"})
+            return res.status(200).json(response);
         }
  
     } catch (error) {

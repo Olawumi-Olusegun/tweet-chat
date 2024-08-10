@@ -20,12 +20,11 @@ const Posts = ({feedType}) => {
 
 	const POST_ENDPOINT = getPostEndPoint();
 
-	const { data: postData, isLoading, refetch, isRefetching } = useQuery({
+	const { data: posts, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["posts"],
 		queryFn: async () => await apiClient.getPosts(POST_ENDPOINT)
 	});
 
-	const posts = postData?.data;
 
 	useEffect(() => {
 		refetch();

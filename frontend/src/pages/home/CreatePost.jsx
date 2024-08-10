@@ -32,6 +32,7 @@ const CreatePost = () => {
 	});
 
 
+
 	const imgRef = useRef(null);
 
 

@@ -109,7 +109,7 @@ export const getPosts = async (postUrl) => {
             throw new Error(responseBody?.message)
         }
       
-        return responseBody;
+        return responseBody?.data;
 
     } catch (error) {
         throw new Error(error?.message)
@@ -208,6 +208,54 @@ export const followAndUnfollow = async (userId) => {
     }
 }
 
+export const likeAndUnlikePost = async (postId) => {
+
+    try {
+        
+        const response = await fetch(`/api/v1/posts/like/${postId}`, {
+            method: "GET",
+            credentials: "include",
+        });
+
+        const responseBody = await response.json();
+
+        if(!response.ok) {
+            throw new Error(responseBody?.message)
+        }
+      
+        return responseBody?.data;
+
+    } catch (error) {
+        throw new Error(error?.message)
+    }
+}
+
+export const commentPost = async (postId, comment) => {
+
+    try {
+        
+        const response = await fetch(`/api/v1/posts/comment/${postId}`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify({ postId, text: comment}),
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+
+        const responseBody = await response.json();
+
+        if(!response.ok) {
+            throw new Error(responseBody?.message)
+        }
+      
+        return responseBody?.data;
+
+    } catch (error) {
+        throw new Error(error?.message)
+    }
+}
+
 const apiClient = {
     signIn,
     signUp,
@@ -218,6 +266,7 @@ const apiClient = {
     createPost,
     suggestedUsers,
     followAndUnfollow,
+    likeAndUnlikePost,
 }
 
 export default apiClient;
