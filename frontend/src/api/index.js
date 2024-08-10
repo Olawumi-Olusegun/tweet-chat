@@ -79,12 +79,12 @@ export const getLoggedInUser = async () => {
         });
 
         const responseBody = await response.json();
-        if(!responseBody.success) return null;
+
         if(!response.ok) {
             throw new Error(responseBody?.message)
         }
       
-        return responseBody;
+        return responseBody?.data;
 
     } catch (error) {
         throw new Error(error?.message)

@@ -3,24 +3,25 @@ import { IoNotifications } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { BiLogOut } from "react-icons/bi";
-import XSvg from "./svgs/XSvg";
+import XSvg from "../svgs/XSvg";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import apiClient from "../api";
+import apiClient from "../../api";
 import toast from "react-hot-toast";
+import LoadingSpinner from "./LoadingSpinner";
 
 const Sidebar = () => {
 	
 	const navigate = useNavigate()
 
 	const queryClient = useQueryClient();
-	const { data: userData } = useQuery({queryKey: ["authUser"]})
-	const authUser = userData?.data;
 
-	const { mutate: logOutMutation } = useMutation({
+	const { data: authUser } = useQuery({queryKey: ["authUser"]});
+
+	const { mutate: logOutMutation, isPending } = useMutation({
 		mutationFn: async () => await apiClient.signOut(),
 		onSuccess: () => {
-			queryClient.invalidateQueries({queryKey: ["authUser"]})
-			navigate("/", { replace: true })
+			queryClient.removeQueries();
+			navigate("/signin", { replace: true })
 		},
 		onError: (error) => {
 			toast.error(error?.message)
@@ -32,13 +33,9 @@ const Sidebar = () => {
 		logOutMutation();
 	}
 
-
-
-	const data = {
-		fullName: "John Doe",
-		userName: "johndoe",
-		profileImg: "/avatars/boy1.png",
-	};
+	if(isPending) {
+		return <LoadingSpinner />
+	}
 
 	return (
 		<div className='md:flex-[2_2_0] w-18 max-w-52'>

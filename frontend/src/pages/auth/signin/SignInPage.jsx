@@ -4,9 +4,10 @@ import { MdPassword } from "react-icons/md";
 import { PiSpinnerGapBold } from "react-icons/pi";
 import XSvg from '../../../components/svgs/XSvg';
 import { Link, useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import apiClient from '../../../api';
 import { toast } from "react-hot-toast";
+import LoadingSpinner from '../../../components/common/LoadingSpinner';
 
 const SignInPage = () => {
   const [formData, setFormData] = useState({
@@ -16,14 +17,10 @@ const SignInPage = () => {
 
 	const navigate = useNavigate();
 
-	const queryClient = useQueryClient();
-
 	const { mutate: signInMutation, isError, error, isPending } = useMutation({
 		mutationFn: async ({email, password}) => await apiClient.signIn({email, password}),
-		onSuccess: () => {
-			// toast.success("Sign in successfully");
+		onSuccess: async () => {
 			setFormData({ email: "", password: "", });
-			// queryClient.invalidateQueries({queryKey: ["authUser"]})
 			navigate("/")
 		},
 		onError: (error) => {
@@ -39,6 +36,10 @@ const SignInPage = () => {
 	const handleInputChange = (e) => {
 		setFormData({ ...formData, [e.target.name]: e.target.value });
 	};
+
+	if(isPending) {
+		return <LoadingSpinner />
+	}
 
 
 	return (

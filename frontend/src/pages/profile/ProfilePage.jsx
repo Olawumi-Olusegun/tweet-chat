@@ -27,8 +27,7 @@ const ProfilePage = () => {
 	const { username } = useParams();
 	const { followAndUnfollowMutation, isPending } = useFollow();
 
-	const { data: userData } = useQuery({queryKey: ["authUser"]})
-	const authUser = userData?.data;
+	const { data: authUser } = useQuery({queryKey: ["authUser"]})
 
 	const { updateProfileMutation, isUpdating } = useUpdateProfile()
 
