@@ -10,7 +10,6 @@ const MainLayout = () => {
   const { data: userData } = useQuery({queryKey: ["authUser"]})
 	const authUser = userData?.data;
 
-  console.log(authUser)
 
   useEffect(() => {
     queryClient.invalidateQueries({queryKey: ["authUser"]});

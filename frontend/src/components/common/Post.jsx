@@ -5,19 +5,37 @@ import { FaRegBookmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import apiClient from "../../api";
 
 const Post = ({ post }) => {
+
+	const { data: userData } = useQuery({queryKey: ["authUser"]})
+	const authUser = userData?.data;
+
+	const queryClient = useQueryClient();
+
+	const { mutate: deletePostMutation, isPending,  } = useMutation({
+		mutationKey: ["deletePost"],
+		mutationFn: async () => await apiClient.deletePost(post._id),
+		onSuccess: () => {
+			queryClient.invalidateQueries({queryKey: ["posts"]})
+		}
+	});
+
 	const [comment, setComment] = useState("");
 	const postOwner = post.user;
 	const isLiked = false;
 
-	const isMyPost = true;
+	const isMyPost = authUser._id === post.user._id;
 
 	const formattedDate = "1h";
 
 	const isCommenting = false;
 
-	const handleDeletePost = () => {};
+	const handleDeletePost = () => {
+		deletePostMutation()
+	};
 
 	const handlePostComment = (e) => {
 		e.preventDefault();
@@ -45,7 +63,12 @@ const Post = ({ post }) => {
 						</span>
 						{isMyPost && (
 							<span className='flex justify-end flex-1'>
-								<FaTrash className='cursor-pointer hover:text-red-500' onClick={handleDeletePost} />
+								{
+									isPending 
+									? <span className="loading loading-spinner loading-xs"></span>
+									: <FaTrash className='cursor-pointer hover:text-red-500' onClick={handleDeletePost} />
+								}
+								
 							</span>
 						)}
 					</div>

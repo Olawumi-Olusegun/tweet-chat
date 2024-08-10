@@ -117,12 +117,36 @@ export const getPosts = async (postUrl) => {
     }
 }
 
+export const deletePost = async (postId) => {
+
+    try {
+        
+        const response = await fetch(`/api/v1/posts/${postId}`, {
+            method: "DELETE",
+            credentials: "include"
+        });
+
+        const responseBody = await response.json();
+
+        if(!responseBody.success) return null;
+        if(!response.ok) {
+            throw new Error(responseBody?.message)
+        }
+      
+        return responseBody;
+
+    } catch (error) {
+        throw new Error(error?.message)
+    }
+}
+
 const apiClient = {
     signIn,
     signUp,
     signOut,
     getLoggedInUser,
     getPosts,
+    deletePost,
 }
 
 export default apiClient;
