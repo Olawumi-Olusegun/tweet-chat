@@ -18,7 +18,13 @@ const MainLayout = () => {
   return (
     <div className='flex w-full'>
         <Sidebar />
-         { !authUser ? <Navigate to={"/signin"} replace={true} /> : <Outlet />}
+         { !authUser 
+         ? <Navigate to={"/signin"} replace={true} /> 
+         : (
+          <div className="w-full">
+            <Outlet />
+          </div>
+         ) }
          <RightPanel />
     </div>
   )

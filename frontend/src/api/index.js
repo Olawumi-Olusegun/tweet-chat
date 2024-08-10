@@ -191,7 +191,7 @@ export const followAndUnfollow = async (userId) => {
     try {
         
         const response = await fetch(`/api/v1/users/follow/${userId}`, {
-            method: "POST",
+            method: "GET",
             credentials: "include",
         });
 
@@ -302,11 +302,39 @@ export const deleteNotifications = async () => {
 
 export const userProfile = async (userName) => {
 
+
     try {
         
         const response = await fetch(`/api/v1/users/profile/${userName}`, {
             method: "GET",
             credentials: "include",
+        });
+
+        const responseBody = await response.json();
+
+
+        if(!response.ok) {
+            throw new Error(responseBody?.message)
+        }
+      
+        return responseBody?.data;
+
+    } catch (error) {
+        throw new Error(error?.message)
+    }
+}
+
+export const updateProfile = async ({coverImage, profileImage, fullName, userName, email, bio, link, newPassword, currentPassword}) => {
+
+    try {
+
+        const response = await fetch(`/api/v1/users/update-profile`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify({coverImage, profileImage, fullName, userName, email, bio, link, newPassword, currentPassword}),
+            headers: {
+                "Content-Type": "application/json"
+            }
         });
 
         const responseBody = await response.json();
@@ -337,6 +365,7 @@ const apiClient = {
     allNotifications,
     deleteNotifications,
     userProfile,
+    updateProfile,
 }
 
 export default apiClient;

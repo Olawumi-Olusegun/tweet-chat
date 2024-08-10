@@ -145,6 +145,8 @@ export const getMe = async (req, res) => {
                 following: user.following,
                 profileImage: user.profileImage,
                 coverImage: user.coverImage,
+                bio: user.bio,
+                link: user.link,
             },
             message: "My data",
             success: true,

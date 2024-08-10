@@ -25,6 +25,8 @@ export const getUserProfile = async (req, res) => {
                 profileImage: user.profileImage,
                 coverImage: user.coverImage,
                 createdAt: user.createdAt,
+                bio: user.bio,
+                link: user.link,
             },
             message: "User Profile",
             success: true,
@@ -54,8 +56,6 @@ export const getSuggestedUsers = async (req, res) => {
             },
             { $sample: { size: 10 } }
         ]);
-
-        console.log(usersFollowedByMe)
 
         const filteredUsers = users.filter((user) => !usersFollowedByMe.following.includes(user._id));
 
@@ -115,6 +115,8 @@ export const followUnFollowUser = async (req, res) => {
 }
 
 export const updateUserProfile = async (req, res) => {
+
+
     const { fullName, email, userName, currentPassword, newPassword, bio, link } = req.body;
     
     let { profileImage, coverImage } = req.body;
@@ -127,8 +129,8 @@ export const updateUserProfile = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found" })
         }
 
-        if((!newPassword && !currentPassword) || (!currentPassword && newPassword)) {
-            return res.status(404).json({ success: false, message: "Please provide both current and new password" });
+        if((!newPassword && currentPassword) || (!currentPassword && newPassword)) {
+            return res.status(400).json({ success: false, message: "To update password your must provide both current and new password" });
         }
 
         if(currentPassword && newPassword) {
@@ -181,6 +183,8 @@ export const updateUserProfile = async (req, res) => {
                 following: user.following,
                 profileImage: user.profileImage,
                 coverImage: user.coverImage,
+                bio: user.bio,
+                link: user.link,
             },
             success: true, 
             message: "User profile updated successfully"

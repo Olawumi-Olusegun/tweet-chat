@@ -9,9 +9,12 @@ import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
 import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "../../api";
 import { formatMemberSinceDate } from "../../utils/date";
+import useFollow from "../../hooks/useFollow";
+import LoadingSpinnerSmall from "../../components/common/LoadingSpinnerSmall";
+import toast from "react-hot-toast";
 
 const ProfilePage = () => {
 	const [coverImage, setCoverImage] = useState(null);
@@ -21,17 +24,43 @@ const ProfilePage = () => {
 	const coverImageRef = useRef(null);
 	const profileImageRef = useRef(null);
 
-	const isMyProfile = true;
-
 	const { username } = useParams();
+	const { followAndUnfollowMutation, isPending } = useFollow();
 
-	const { data: user, isLoading, refetch, isRefetching,  } = useQuery({
+	const queryClient = useQueryClient();
+
+	const { data: userData } = useQuery({queryKey: ["authUser"]})
+	const authUser = userData?.data;
+
+	const { data: user, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["userProfile"],
-		queryFn: async () => apiClient.userProfile(username),
+		queryFn:  () => apiClient.userProfile(username),
 		enabled: !!username,
 	});
 
+	const { mutate: updateMutation, isPending: isUpdating } = useMutation({
+		mutationKey: ["updateProfile"],
+		mutationFn:  () => apiClient.updateProfile({coverImage, profileImage}),
+		onSuccess: () => {
+			toast.success("Profile updated successfully")
+			Promise.all([
+				queryClient.invalidateQueries({queryKey: ["authUser"]}),
+				queryClient.invalidateQueries({queryKey: ["userProfile"]}),
+			])
+		setProfileImage(null);
+		setCoverImage(null);
+		},
+		onError: (error) => {
+			console.log(error)
+			toast.error("Unable to update profile")
+		},
+	});
+
+
 	const memberSinceData = formatMemberSinceDate(user?.createdAt);
+	const isMyProfile = authUser?._id === user?._id;
+	const amImFollowing = authUser?.followers?.includes(user?._id);
+
 
 	useEffect(() => {
 		refetch();
@@ -50,10 +79,15 @@ const ProfilePage = () => {
 		}
 	};
 
-	if(!username) {
+	const handleImageUpdate = () => {
+		if(isUpdating) return;
+		updateMutation()
+	}
+
+	if(!username || !user) {
 		return null;
 	}
-	
+
 
 	return (
 		<>
@@ -61,10 +95,11 @@ const ProfilePage = () => {
 				{/* HEADER */}
 				{(isLoading || isRefetching) && <ProfileHeaderSkeleton />}
 				{!isLoading && !isRefetching && !user && <p className='text-center text-lg mt-4'>User not found</p>}
-				<div className='flex flex-col'>
+				<div className='flex flex-col w-full min-w-full flex-1'>
+				
 					{!isLoading && !isRefetching && user && (
 						<>
-							<div className='flex gap-10 px-4 py-2 items-center'>
+							<div className='flex gap-10 px-4 py-2 items-center w-full'>
 								<Link to='/' className="hover:bg-gray-200/10 rounded-full duration-300 p-2">
 									<FaArrowLeft className='w-4 h-4' />
 								</Link>
@@ -117,21 +152,25 @@ const ProfilePage = () => {
 								</div>
 							</div>
 							<div className='flex justify-end px-4 mt-5'>
-								{isMyProfile && <EditProfileModal />}
+								{isMyProfile && <EditProfileModal authUser={authUser} />}
 								{!isMyProfile && (
 									<button
 										className='btn btn-outline rounded-full btn-sm'
-										onClick={() => alert("Followed successfully")}
+										onClick={() => followAndUnfollowMutation(user?._id)}
 									>
-										Follow
+										{isPending && <LoadingSpinnerSmall /> }
+										{
+											!isPending && amImFollowing ? "Follow" : "Unfollow"
+										}
 									</button>
 								)}
 								{(coverImage || profileImage) && (
 									<button
 										className='btn btn-primary rounded-full btn-sm text-white px-4 ml-2'
-										onClick={() => alert("Profile updated successfully")}
+										onClick={handleImageUpdate}
 									>
-										Update
+										{  isUpdating  ? "Updating..." : "Update" }
+										
 									</button>
 								)}
 							</div>
@@ -196,9 +235,9 @@ const ProfilePage = () => {
 								</div>
 							</div>
 						</>
-					)}
-
+					) }
 					<Posts feedType={feedType} username={username} userId={user?._id} />
+					
 				</div>
 			</div>
 		</>
