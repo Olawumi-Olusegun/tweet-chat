@@ -24,6 +24,7 @@ export const getUserProfile = async (req, res) => {
                 following: user.following,
                 profileImage: user.profileImage,
                 coverImage: user.coverImage,
+                createdAt: user.createdAt,
             },
             message: "User Profile",
             success: true,

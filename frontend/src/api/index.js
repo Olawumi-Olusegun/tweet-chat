@@ -256,6 +256,72 @@ export const commentPost = async (postId, comment) => {
     }
 }
 
+export const allNotifications = async () => {
+
+    try {
+        
+        const response = await fetch(`/api/v1/notifications`, {
+            method: "GET",
+            credentials: "include",
+        });
+
+        const responseBody = await response.json();
+
+        if(!response.ok) {
+            throw new Error(responseBody?.message)
+        }
+      
+        return responseBody?.data;
+
+    } catch (error) {
+        throw new Error(error?.message)
+    }
+}
+
+export const deleteNotifications = async () => {
+
+    try {
+        
+        const response = await fetch(`/api/v1/notifications`, {
+            method: "GET",
+            credentials: "include",
+        });
+
+        const responseBody = await response.json();
+
+        if(!response.ok) {
+            throw new Error(responseBody?.message)
+        }
+      
+        return responseBody?.data;
+
+    } catch (error) {
+        throw new Error(error?.message)
+    }
+}
+
+export const userProfile = async (userName) => {
+
+    try {
+        
+        const response = await fetch(`/api/v1/users/profile/${userName}`, {
+            method: "GET",
+            credentials: "include",
+        });
+
+        const responseBody = await response.json();
+
+        if(!response.ok) {
+            throw new Error(responseBody?.message)
+        }
+      
+        return responseBody?.data;
+
+    } catch (error) {
+        throw new Error(error?.message)
+    }
+}
+
 const apiClient = {
     signIn,
     signUp,
@@ -267,6 +333,10 @@ const apiClient = {
     suggestedUsers,
     followAndUnfollow,
     likeAndUnlikePost,
+    commentPost,
+    allNotifications,
+    deleteNotifications,
+    userProfile,
 }
 
 export default apiClient;

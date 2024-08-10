@@ -34,9 +34,8 @@ export const createPost = async (req, res) => {
             image,
         });
 
-
         const savedPost = await newPost.save();
-        
+ 
         const response = {
             data: savedPost,
             message: "Post created successfully",

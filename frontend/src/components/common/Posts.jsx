@@ -4,7 +4,7 @@ import Post from "./Post"
 import apiClient from "../../api";
 import { useEffect } from "react";
 
-const Posts = ({feedType}) => {
+const Posts = ({feedType, username, userId}) => {
 
 
 	const getPostEndPoint = () => {
@@ -13,6 +13,10 @@ const Posts = ({feedType}) => {
 			return '/api/v1/posts/all-posts';
 			case "following":
 			return '/api/v1/posts/following';
+			case "posts":
+			return `/api/v1/posts/user/${username}`;
+			case "likes":
+			return `/api/v1/posts/likes/${userId}`;
 			default:
 				return "/api/v1/posts/all-posts"
 		}
@@ -28,7 +32,7 @@ const Posts = ({feedType}) => {
 
 	useEffect(() => {
 		refetch();
-	}, [feedType, refetch])
+	}, [feedType, refetch, username])
 
 	return (
 		<>
