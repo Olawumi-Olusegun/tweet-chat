@@ -19,7 +19,6 @@ const Sidebar = () => {
 	const { mutate: logOutMutation } = useMutation({
 		mutationFn: async () => await apiClient.signOut(),
 		onSuccess: () => {
-			toast.success("Logout successfully")
 			queryClient.invalidateQueries({queryKey: ["authUser"]})
 			navigate("/", { replace: true })
 		},
