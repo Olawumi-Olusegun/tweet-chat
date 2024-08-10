@@ -34,7 +34,7 @@ const ProfilePage = () => {
 
 	const { data: user, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["userProfile"],
-		queryFn:  () => apiClient.userProfile(username),
+		queryFn:  async () => await apiClient.userProfile(username),
 		enabled: !!username,
 	});
 

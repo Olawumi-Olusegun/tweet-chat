@@ -24,7 +24,7 @@ const useUpdateProfile = () => {
 	});
 
 
-  return  {updateProfileMutation, isUpdating}
+  return { updateProfileMutation, isUpdating }
 }
 
 export default useUpdateProfile

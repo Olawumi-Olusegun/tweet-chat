@@ -14,7 +14,7 @@ import LoadingSpinner from "./components/common/LoadingSpinner"
 
 function App() {
 
-  const { data, isPending, isError, error  } = useQuery({
+  const { isPending } = useQuery({
     queryKey: ["authUser"],
     queryFn: async () => await apiClient.getLoggedInUser(),
     retry: false,

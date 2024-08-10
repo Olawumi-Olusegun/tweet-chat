@@ -12,8 +12,6 @@ const EditProfileModal = ({authUser}) => {
 		currentPassword: "",
 	});
 
-	const {fullName, userName, email, bio, link, newPassword, currentPassword } = formData;
-
 	const {updateProfileMutation, isUpdating } = useUpdateProfile()
 
 	const handleInputChange = (e) => {
@@ -23,7 +21,7 @@ const EditProfileModal = ({authUser}) => {
 	const handleProfileUpdate = async (event) => {
 		event.preventDefault();
 		if(isUpdating) return;
-		await updateProfileMutation({fullName, userName, email, bio, link, newPassword, currentPassword });
+		await updateProfileMutation(formData);
 		setFormData({
 			fullName: "",
 			userName: "",
@@ -32,7 +30,7 @@ const EditProfileModal = ({authUser}) => {
 			link: "",
 			newPassword: "",
 			currentPassword: "",
-		})
+		});
 	}
 
 	useEffect(() => {
@@ -47,7 +45,7 @@ const EditProfileModal = ({authUser}) => {
 				currentPassword: "",
 			})
 		}
-	}, [])
+	}, [authUser])
 
 	return (
 		<>
@@ -75,7 +73,7 @@ const EditProfileModal = ({authUser}) => {
 								placeholder='Username'
 								className='flex-1 input border border-gray-700 rounded p-2 input-md'
 								value={formData.userName}
-								name='username'
+								name='userName'
 								onChange={handleInputChange}
 							/>
 						</div>

@@ -79,7 +79,6 @@ export const getLoggedInUser = async () => {
         });
 
         const responseBody = await response.json();
-        // console.log(responseBody)
         if(!responseBody.success) return null;
         if(!response.ok) {
             throw new Error(responseBody?.message)
@@ -324,14 +323,14 @@ export const userProfile = async (userName) => {
     }
 }
 
-export const updateProfile = async ({coverImage, profileImage, fullName, userName, email, bio, link, newPassword, currentPassword}) => {
+export const updateProfile = async (formData) => {
 
     try {
 
         const response = await fetch(`/api/v1/users/update-profile`, {
             method: "POST",
             credentials: "include",
-            body: JSON.stringify({coverImage, profileImage, fullName, userName, email, bio, link, newPassword, currentPassword}),
+            body: JSON.stringify(formData),
             headers: {
                 "Content-Type": "application/json"
             }
