@@ -186,6 +186,28 @@ export const suggestedUsers = async () => {
     }
 }
 
+export const followAndUnfollow = async (userId) => {
+
+    try {
+        
+        const response = await fetch(`/api/v1/users/follow/${userId}`, {
+            method: "POST",
+            credentials: "include",
+        });
+
+        const responseBody = await response.json();
+
+        if(!response.ok) {
+            throw new Error(responseBody?.message)
+        }
+      
+        return responseBody?.data;
+
+    } catch (error) {
+        throw new Error(error?.message)
+    }
+}
+
 const apiClient = {
     signIn,
     signUp,
@@ -195,6 +217,7 @@ const apiClient = {
     deletePost,
     createPost,
     suggestedUsers,
+    followAndUnfollow,
 }
 
 export default apiClient;

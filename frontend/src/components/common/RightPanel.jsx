@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import RightPanelSkeleton from "../skeletons/RightPanelSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "../../api";
+import useFollow from "../../hooks/useFollow";
 
 
 const RightPanel = () => {
@@ -10,6 +11,14 @@ const RightPanel = () => {
 		queryKey: ["suggestedUsers"],
 		queryFn: async () => await apiClient.suggestedUsers(),
 	});
+
+	const {followAndUnfollowMutation, isPending } = useFollow();
+
+	const handleFollowAndUnfollow = (event, userId) => {
+		event.preventDefault();
+
+		followAndUnfollowMutation(userId)
+	}	
 
 
 	if(suggestedUsers?.length === 0) {
@@ -54,9 +63,12 @@ const RightPanel = () => {
 								<div>
 									<button
 										className='btn bg-white text-black hover:bg-white hover:opacity-90 rounded-full btn-sm'
-										onClick={(e) => e.preventDefault()}
+										onClick={(event) => handleFollowAndUnfollow(event, user?._id)}
 									>
-										Follow
+										{ isPending 
+										? <span className="loading loading-spinner loading-xs"></span>
+										: "Follow" 
+										}
 									</button>
 								</div>
 							</Link>
