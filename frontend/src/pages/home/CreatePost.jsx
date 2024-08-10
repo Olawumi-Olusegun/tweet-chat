@@ -3,16 +3,37 @@ import { CiImageOn } from "react-icons/ci";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { useRef, useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import apiClient from "../../api";
+import toast from "react-hot-toast";
 
 const CreatePost = () => {
     
 	const [text, setText] = useState("");
-	const [img, setImg] = useState(null);
+	const [image, setImage] = useState(null);
+
+	const queryClient = useQueryClient();
+
+	const { data: userData } = useQuery({queryKey: ["authUser"]})
+	const authUser = userData?.data;
+
+	const { mutate: createPostMutation, isPending, isError, error } = useMutation({
+		mutationKey: "createPost",
+		mutationFn: async ({text, image}) => await apiClient.createPost({text, image}),
+		onSuccess: async () => {
+			setText("")
+			setImage(null)
+			toast.success("Post created successfully");
+			queryClient.invalidateQueries({queryKey: ["posts"]})
+		},
+		onError: () => {
+			toast.success("Unable to create post");
+		}
+	});
+
 
 	const imgRef = useRef(null);
 
-	const isPending = false;
-	const isError = false;
 
 	const data = {
 		profileImg: "/avatars/boy1.png",
@@ -20,7 +41,7 @@ const CreatePost = () => {
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
-		alert("Post created successfully");
+		createPostMutation({ text, image })
 	};
 
 	const handleImgChange = (e) => {
@@ -28,7 +49,7 @@ const CreatePost = () => {
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = () => {
-				setImg(reader.result);
+				setImage(reader.result);
 			};
 			reader.readAsDataURL(file);
 		}
@@ -38,7 +59,7 @@ const CreatePost = () => {
 		<div className='flex p-4 items-start gap-4 border-b border-gray-700'>
 			<div className='avatar'>
 				<div className='w-8 rounded-full'>
-					<img src={data.profileImg || "/avatar-placeholder.png"} />
+					<img src={authUser?.profileImage || "/avatar-placeholder.png"} />
 				</div>
 			</div>
 			<form className='flex flex-col gap-2 w-full' onSubmit={handleSubmit}>
@@ -48,16 +69,16 @@ const CreatePost = () => {
 					value={text}
 					onChange={(e) => setText(e.target.value)}
 				/>
-				{img && (
+				{image && (
 					<div className='relative w-72 mx-auto'>
 						<IoCloseSharp
 							className='absolute top-0 right-0 text-white bg-gray-800 rounded-full w-5 h-5 cursor-pointer'
 							onClick={() => {
-								setImg(null);
+								setImage(null);
 								imgRef.current.value = null;
 							}}
 						/>
-						<img src={img} className='w-full mx-auto h-72 object-contain rounded' />
+						<img src={image} className='w-full mx-auto h-72 object-contain rounded' />
 					</div>
 				)}
 
@@ -74,7 +95,7 @@ const CreatePost = () => {
 						{isPending ? "Posting..." : "Post"}
 					</button>
 				</div>
-				{isError && <div className='text-red-500'>Something went wrong</div>}
+				{isError && <div className='text-red-500'>Something went wrong: {error?.message}</div>}
 			</form>
 		</div>
 	);

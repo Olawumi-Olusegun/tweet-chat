@@ -105,7 +105,6 @@ export const getPosts = async (postUrl) => {
 
         const responseBody = await response.json();
 
-        if(!responseBody.success) return null;
         if(!response.ok) {
             throw new Error(responseBody?.message)
         }
@@ -128,7 +127,32 @@ export const deletePost = async (postId) => {
 
         const responseBody = await response.json();
 
-        if(!responseBody.success) return null;
+        if(!response.ok) {
+            throw new Error(responseBody?.message)
+        }
+      
+        return responseBody;
+
+    } catch (error) {
+        throw new Error(error?.message)
+    }
+}
+
+export const createPost = async ({text, image}) => {
+
+    try {
+        
+        const response = await fetch(`/api/v1/posts/create`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify({text, image}),
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+
+        const responseBody = await response.json();
+
         if(!response.ok) {
             throw new Error(responseBody?.message)
         }
@@ -147,6 +171,7 @@ const apiClient = {
     getLoggedInUser,
     getPosts,
     deletePost,
+    createPost,
 }
 
 export default apiClient;
