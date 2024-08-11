@@ -20,7 +20,7 @@ const Sidebar = () => {
 	const { mutate: logOutMutation, isPending } = useMutation({
 		mutationFn: async () => await apiClient.signOut(),
 		onSuccess: () => {
-			queryClient.removeQueries();
+			queryClient.removeQueries(authUser);
 			navigate("/signin", { replace: true })
 		},
 		onError: (error) => {

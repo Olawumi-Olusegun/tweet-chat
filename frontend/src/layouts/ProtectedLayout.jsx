@@ -7,7 +7,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner'
 
 const ProtectedLayout = () => {
 
-  const { data: authUser, isLoading, } = useAuth();
+  const { data: authUser, isLoading } = useAuth();
   
     if(isLoading) {
       return <LoadingSpinner />
@@ -15,10 +15,10 @@ const ProtectedLayout = () => {
 
   return (
     <div className='flex w-full'>
-        <Sidebar />
+       <Sidebar />
          { !authUser
          ? <Navigate to={"/signin"} replace={true} /> 
-         : <div className="w-full"> <Outlet /> </div> }
+         : <div className="flex-1"> <Outlet /> </div> }
          <RightPanel />
     </div>
   )

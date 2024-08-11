@@ -23,7 +23,7 @@ export const protectRoute = async (req, res, next) => {
             return res.status(401).json({ success: false, message: "Unauthorized: user not found" })  
         }
 
-        req.userId = user.id;
+        req.userId = user._id;
         next();
 
     } catch (error) {

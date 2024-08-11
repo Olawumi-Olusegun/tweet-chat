@@ -210,7 +210,7 @@ export const followAndUnfollow = async (userId) => {
 export const likeAndUnlikePost = async (postId) => {
 
     try {
-        
+
         const response = await fetch(`/api/v1/posts/like/${postId}`, {
             method: "GET",
             credentials: "include",
@@ -236,7 +236,7 @@ export const commentPost = async (postId, comment) => {
         const response = await fetch(`/api/v1/posts/comment/${postId}`, {
             method: "POST",
             credentials: "include",
-            body: JSON.stringify({ postId, text: comment}),
+            body: JSON.stringify({ comment }),
             headers: {
                 "Content-Type": "application/json",
             }
@@ -251,6 +251,7 @@ export const commentPost = async (postId, comment) => {
         return responseBody?.data;
 
     } catch (error) {
+        console.log(error)
         throw new Error(error?.message)
     }
 }
@@ -282,7 +283,7 @@ export const deleteNotifications = async () => {
     try {
         
         const response = await fetch(`/api/v1/notifications`, {
-            method: "GET",
+            method: "DELETE",
             credentials: "include",
         });
 

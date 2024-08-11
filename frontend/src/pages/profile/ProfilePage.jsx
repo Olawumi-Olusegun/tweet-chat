@@ -40,7 +40,7 @@ const ProfilePage = () => {
 
 	const memberSinceData = formatMemberSinceDate(user?.createdAt);
 	const isMyProfile = authUser?._id === user?._id;
-	const amImFollowing = authUser?.followers?.includes(user?._id);
+	const amIFollowing = authUser?.following?.includes(user?._id);
 
 
 	useEffect(() => {
@@ -143,7 +143,7 @@ const ProfilePage = () => {
 									>
 										{isPending && <LoadingSpinnerSmall /> }
 										{
-											!isPending && amImFollowing ? "Follow" : "Unfollow"
+											!isPending && amIFollowing ? "Unfollow" : "Follow"
 										}
 									</button>
 								)}

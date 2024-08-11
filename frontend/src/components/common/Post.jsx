@@ -13,8 +13,7 @@ import { formatPostDate } from "../../utils/date";
 
 const Post = ({ post }) => {
 
-	const { data: userData } = useQuery({queryKey: ["authUser"]})
-	const authUser = userData?.data;
+	const { data: authUser } = useQuery({queryKey: ["authUser"]});
 
 	const queryClient = useQueryClient();
 
@@ -47,7 +46,7 @@ const Post = ({ post }) => {
 	
 	const { mutate: commentPostMutation, isPending: isCommenting, } = useMutation({
 		mutationKey: "commentPost",
-		mutationFn: async ({postId,  comment}) => await apiClient.commentPost({postId ,comment}),
+		mutationFn: async ({postId,  comment}) => await apiClient.commentPost(postId ,comment),
 		onSuccess: async () => {
 			setComment("")
 			queryClient.invalidateQueries({queryKey: ["posts"]})

@@ -10,10 +10,10 @@ export const createPost = async (req, res) => {
 
     let { image } = req.body;
 
-    const userId = req.userId;
+    const currentlyLoggedInUserId = req.userId.toString();
 
     try {
-        const user = await UserModel.findById(userId);
+        const user = await UserModel.findById(currentlyLoggedInUserId);
 
         if(!user) {
             return res.status(400).json({ success: false, message: "User not found" })
@@ -29,7 +29,7 @@ export const createPost = async (req, res) => {
         }
 
         const newPost = new PostModel({
-            user: userId,
+            user: currentlyLoggedInUserId,
             text,
             image,
         });
@@ -62,6 +62,8 @@ export const deletePost = async (req, res) => {
 
     const {postId} = req.params;
 
+    const currentlyLoggedInUserId = req.userId.toString();
+
     try {
 
         const post = await PostModel.findById(postId);
@@ -70,7 +72,7 @@ export const deletePost = async (req, res) => {
             return res.status(404).json({ success: false, message: "Post not found" })
         }
 
-        if(post.user.toString() !== req.userId) {
+        if(post.user.toString() !== currentlyLoggedInUserId) {
             return res.status(400).json({ success: false, message: "Unauthorized: You are not allowed to delete this post" })
         }
 
@@ -95,8 +97,8 @@ export const deletePost = async (req, res) => {
 
 export const commentOnPost = async (req, res) => {
     const { postId } = req.params;
-    const { text } = req.body;
-    const  userId = req.userId;
+    const text = req.body.comment;
+    const currentlyLoggedInUserId = req.userId.toString();
 
     try {
 
@@ -110,7 +112,7 @@ export const commentOnPost = async (req, res) => {
             return res.status(404).json({ success: false, message: "Post not found" })
         }
 
-        const comment = { user: userId, text }
+        const comment = { user: currentlyLoggedInUserId, text }
 
         post.comments.push(comment);
 
@@ -137,8 +139,8 @@ export const commentOnPost = async (req, res) => {
 export const likeAndUnlikePost = async (req, res) => {
     
     const { postId } = req.params;
-    const  userId = req.userId;
-
+    const currentlyLoggedInUserId = req.userId.toString();
+  
     try {
 
         const post = await PostModel.findById(postId);
@@ -147,27 +149,28 @@ export const likeAndUnlikePost = async (req, res) => {
             return res.status(404).json({ success: false, message: "Post not found" })
         }
 
-        const userLikedPost = post.likes.includes(userId);
+        const userLikedPost = post.likes.includes(req.userId);
 
         if(userLikedPost) {
-            await PostModel.updateOne({ _id: postId }, { $pull: {likes: userId }});
-            await UserModel.updateOne({ _id: userId }, { $pull: { likedPosts: postId } });
+
+            await PostModel.updateOne({ _id: postId }, { $pull: {likes: currentlyLoggedInUserId }});
+            await UserModel.updateOne({ _id: currentlyLoggedInUserId }, { $pull: { likedPosts: postId } });
             
-            const updatedLikes = post.likes.filter((id) => id.toString() !== userId.toString());
+            const updatedLikes = post.likes.filter((id) => id.toString() !== currentlyLoggedInUserId );
 
             const response = {
-                data: updatedLikes, 
-                success: true, 
+                data: updatedLikes,
+                success: true,
                 message: "Post unliked was successfull"
             }
 
             return res.status(200).json(response)
         } else {
-            post.likes.push(userId);
-            await UserModel.updateOne({ _id: userId }, { $push: { likedPosts: postId } });
+            post.likes.push(req.userId);
+            await UserModel.updateOne({ _id: currentlyLoggedInUserId }, { $push: { likedPosts: postId } });
             await post.save();
             const notification = new NotificationModel({
-                from: userId,
+                from: currentlyLoggedInUserId,
                 to: post.user,
                 type: "like",
             });
@@ -179,7 +182,7 @@ export const likeAndUnlikePost = async (req, res) => {
                 success: true, 
                 message: "Post liked successfully"
             }
-            
+ 
             return res.status(200).json(response);
         }
  
@@ -252,7 +255,6 @@ export const getLikedPosts = async (req, res) => {
             message: "All post likes",
             success: true,
         }
-
         return res.status(200).json(response)
 
     } catch (error) {
@@ -263,11 +265,11 @@ export const getLikedPosts = async (req, res) => {
 
 export const getFollowingPosts = async (req, res) => {
 
-    const userId = req.userId;
+    const currentlyLoggedInUserId = req.userId.toString();
 
     try {
 
-        const user = await UserModel.findById(userId);
+        const user = await UserModel.findById(currentlyLoggedInUserId);
 
 
         if(!user) {
@@ -303,7 +305,7 @@ export const getFollowingPosts = async (req, res) => {
 
 export const getUserPosts = async (req, res) => {
 
-    const userId = req.userId;
+    const currentlyLoggedInUserId = req.userId.toString();
 
     const {userName} = req.params;
 
@@ -317,7 +319,7 @@ export const getUserPosts = async (req, res) => {
         }
 
 
-        const posts = await PostModel.find({ user:userId })
+        const posts = await PostModel.find({ user: currentlyLoggedInUserId })
             .sort({ createdAt: -1 })
             .populate({ path: "user", select: "-password", })
             .populate({ path: "comments.user", select: "-password", });

@@ -1,17 +1,17 @@
 import NotificationModel from "../models/notification.model.js";
 
-export const getNotification = async (req, res) => {
+export const getNotifications = async (req, res) => {
 
-    const userId = req.userId;
+    const currentlyLoggedInUserId = req.userId.toString();
 
     try {
-        const notification = await NotificationModel.find({ to: userId })
+        const notification = await NotificationModel.find({ to: currentlyLoggedInUserId })
         .populate({
             path: "from",
             select: "userName profileImage"
         });
 
-        await NotificationModel.updateMany({ to: userId }, { read: true });
+        await NotificationModel.updateMany({ to: currentlyLoggedInUserId }, { read: true });
 
         const response = {
             data: notification,
@@ -27,16 +27,18 @@ export const getNotification = async (req, res) => {
     }
 }
 
-export const deleteNotification = async (req, res) => {
+export const deleteNotifications = async (req, res) => {
 
-    const userId = req.userId;
+    const currentlyLoggedInUserId = req.userId.toString();
 
     try {
 
-        await NotificationModel.deleteMany({ to: userId });
+        const nots = await NotificationModel.find({});
+
+        await NotificationModel.deleteMany({ to: currentlyLoggedInUserId });
 
         const response = {
-            data: null,
+            data: [],
             message: "All deleted successfully",
             success: true,
         }
@@ -52,7 +54,7 @@ export const deleteNotification = async (req, res) => {
 export const deleteSingleNotification = async (req, res) => {
 
     const { notificationId } = req.params;
-    const userId = req.userId;
+    const currentlyLoggedInUserId = req.userId.toString();
 
     try {
 
@@ -62,7 +64,7 @@ export const deleteSingleNotification = async (req, res) => {
             return res.status(404).json({ success: false, message: "Notification not found" })
         }
 
-        if(notification.to.toString() !== userId) {
+        if(notification.to.toString() !== currentlyLoggedInUserId) {
             return res.status(403).json({ success: false, message: "Unauthorized: You're not allowed to delete this notification" })
         }
 

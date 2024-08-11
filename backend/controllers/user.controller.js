@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import cloudinary from "../lib/cloudinary.js";
 import NotificationModel from "../models/notification.model.js";
 import UserModel from "../models/user.model.js";
@@ -46,12 +47,12 @@ export const getSuggestedUsers = async (req, res) => {
     
     try {
 
-        const usersFollowedByMe = await UserModel.findById(userId).select("following");
+        const usersFollowedByMe = await UserModel.findById(userId.toString()).select("following");
 
         const users = await UserModel.aggregate([
             {
                 $match: {
-                    _id: { $ne: userId }
+                    _id: { $ne: new mongoose.Types.ObjectId(userId) }
                 },
             },
             { $sample: { size: 10 } }
@@ -61,7 +62,7 @@ export const getSuggestedUsers = async (req, res) => {
 
         const suggestedUsers = filteredUsers.slice(0, 4);
 
-        suggestedUsers.forEach((user) => user.password = undefined);
+        suggestedUsers.forEach((user) => (user.password = undefined));
 
         const response = {
             data: suggestedUsers,
@@ -81,14 +82,17 @@ export const followUnFollowUser = async (req, res) => {
 
     const { userId } = req.params;
 
-    try {
-        
-        const userToModify = await UserModel.findById(userId);
-        const currentUser = await UserModel.findById(req.userId);
+    const currentlyLoggedInUserId = req.userId.toString();
 
-        if(userId === req.userId) {
+    try {
+
+        if(userId === currentlyLoggedInUserId) {
             return res.status(400).json({ success: false, message: "You can't follow/unfollow yourself" })
         }
+        
+        const userToModify = await UserModel.findById(userId);
+        const currentUser = await UserModel.findById(currentlyLoggedInUserId);
+
 
         if(!userToModify || !currentUser) {
             return res.status(400).json({ success: false, message: "User not found" })
@@ -97,13 +101,13 @@ export const followUnFollowUser = async (req, res) => {
         const isFollowing = currentUser.following.includes(userId);
 
         if(isFollowing) {
-            await UserModel.findByIdAndUpdate(userId, {$pull: { followers: req.userId } } );
-            await UserModel.findByIdAndUpdate(req.userId, {$pull: { following: userId } } );
+            await UserModel.findByIdAndUpdate(userId, {$pull: { followers: currentlyLoggedInUserId } } );
+            await UserModel.findByIdAndUpdate(currentlyLoggedInUserId, {$pull: { following: userId } } );
             return res.status(200).json({ success: true, message: "User unfollowed successfully" });
         } else {
-            await UserModel.findByIdAndUpdate(userId, {$push: { followers: req.userId } } );
-            await UserModel.findByIdAndUpdate(req.userId, {$push: { following: userId } } );
-            const newNotification = new NotificationModel({ from: req.userId, to: userToModify.id, type: "follow",  });
+            await UserModel.findByIdAndUpdate(userId, {$push: { followers: currentlyLoggedInUserId } } );
+            await UserModel.findByIdAndUpdate(currentlyLoggedInUserId, {$push: { following: userId } } );
+            const newNotification = new NotificationModel({ from: currentlyLoggedInUserId, to: userToModify.id, type: "follow",  });
             await newNotification.save();
             return res.status(200).json({ success: true, message: "User followed successfully" });
         }
@@ -116,6 +120,7 @@ export const followUnFollowUser = async (req, res) => {
 
 export const updateUserProfile = async (req, res) => {
 
+    const currentlyLoggedInUserId = req.userId.toString();
 
     const { fullName, email, userName, currentPassword, newPassword, bio, link } = req.body;
     
@@ -123,7 +128,7 @@ export const updateUserProfile = async (req, res) => {
 
     try {
 
-        let user = await UserModel.findById(req.userId);
+        let user = await UserModel.findById(currentlyLoggedInUserId);
 
         if(!user) {
             return res.status(404).json({ success: false, message: "User not found" })
