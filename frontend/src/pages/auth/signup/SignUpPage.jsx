@@ -49,11 +49,11 @@ const SignUpPage = () => {
     <>
     		<div className='w-full p-5 lg:max-w-screen-3xl mx-auto flex h-screen'>
 			<div className='flex-1 hidden lg:flex items-center  justify-center'>
-				<XSvg className=' lg:w-2/3 fill-white' />
+			<img src="/images/logo.png" alt="logo" className='lg:w-2/3 pointer-events-none fill-white' />
 			</div>
 			<div className='flex-1 flex flex-col justify-center items-center'>
 				<form className='lg:w-full mx-auto  flex gap-4 flex-col' onSubmit={handleSubmit}>
-					<XSvg className='w-24 lg:hidden fill-white' />
+				<img src="/images/logo.png" alt="logo" className='w-24 pointer-events-none lg:hidden fill-white' />
 					<h1 className='text-4xl font-extrabold text-white'>Join today.</h1>
 					<label className='input input-bordered rounded flex items-center gap-2'>
 						<MdOutlineMail />
